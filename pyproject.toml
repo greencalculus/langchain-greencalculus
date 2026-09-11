@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "langchain-greencalculus"
+version = "0.1.0"
+description = "LangChain tools for sourced greenhouse-gas emission factors — every value returns with its publisher, exact source cell and citation."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [{ name = "GreenCalculus", email = "jeremiah@greencalculus.com" }]
+keywords = [
+  "langchain", "langchain-integration", "emission factors", "carbon", "ghg",
+  "greenhouse gas", "carbon accounting", "sustainability", "agent tools", "rag",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+dependencies = [
+  "langchain-core>=0.3.0",
+  "greencalculus>=0.2.0",
+]
+
+[project.urls]
+Homepage = "https://greencalculus.com/developers/?ref=langchain"
+Source = "https://github.com/greencalculus/langchain-greencalculus"
+Issues = "https://github.com/greencalculus/langchain-greencalculus/issues"
+"Why this exists (benchmark, DOI)" = "https://doi.org/10.5281/zenodo.22692277"
+
+[project.optional-dependencies]
+test = ["pytest>=7", "pytest-asyncio>=0.23", "langchain-tests>=0.3"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["langchain_greencalculus"]
+
+[tool.pytest.ini_options]
+# langchain-tests' integration suite is async; without auto mode pytest skips
+# straight past the async cases and reports a pass that never ran.
+asyncio_mode = "auto"
+testpaths = ["tests"]

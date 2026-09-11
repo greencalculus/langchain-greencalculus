@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}" }
+      - run: pip install -e ".[test]"
+
+      # No GREENCALCULUS_API_KEY is configured, on purpose. The integration
+      # suite hits the open browse route, so a green run here proves the
+      # advertised no-key path actually works for a stranger.
+      - name: LangChain conformance + behaviour suite
+        run: pytest -q
+
+      - name: The keyless promise in the README must hold
+        run: |
+          python - <<'PY'
+          from langchain_greencalculus import EmissionFactorLookup
+          out = EmissionFactorLookup().invoke({"key": "grid.gbr.electricity.location_based"})
+          assert out.startswith("0.13096 "), out
+          assert "citation:" in out and "DESNZ" in out, out
+          print("keyless lookup returns a value with its citation")
+          PY
