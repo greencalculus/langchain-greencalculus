@@ -34,7 +34,7 @@ dependencies = [
 Homepage = "https://greencalculus.com/developers/?ref=langchain"
 Source = "https://github.com/greencalculus/langchain-greencalculus"
 Issues = "https://github.com/greencalculus/langchain-greencalculus/issues"
-"Why this exists (benchmark, DOI)" = "https://doi.org/10.5281/zenodo.22692277"
+Benchmark = "https://doi.org/10.5281/zenodo.22692277"
 
 [project.optional-dependencies]
 test = ["pytest>=7", "pytest-asyncio>=0.23", "langchain-tests>=0.3"]
