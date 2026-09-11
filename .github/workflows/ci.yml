@@ -3,6 +3,12 @@ name: CI
 on:
   push: { branches: [main] }
   pull_request:
+  schedule:
+    # Weekly. Two things break this package without anyone touching it: a
+    # langchain-core release changing the tool interface, and our own API
+    # changing its response shape. Both are upstream, both are silent, and a
+    # user hitting them first is the failure mode this job exists to prevent.
+    - cron: "41 7 * * 2"
   workflow_dispatch:
 
 permissions:
@@ -36,3 +42,18 @@ jobs:
           assert "citation:" in out and "DESNZ" in out, out
           print("keyless lookup returns a value with its citation")
           PY
+
+  latest:
+    name: Against the latest langchain-core
+    runs-on: ubuntu-latest
+    # Informational: an upstream release should warn us, not block our PRs.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: |
+          pip install -e ".[test]"
+          pip install --upgrade langchain-core langchain-tests
+          python -c "import langchain_core; print('langchain-core', langchain_core.__version__)"
+      - run: pytest -q
