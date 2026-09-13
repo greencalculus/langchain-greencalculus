@@ -116,7 +116,7 @@ class EmissionFactorLookup(_Base):
     description: str = (
         "Get a greenhouse-gas emission factor by its exact key, with the source it "
         "came from. Returns the value, the unit, and a citation naming the publisher "
-        "and the exact cell in their workbook. "
+        "and the exact place in their own document. "
         "ALWAYS use this instead of recalling a factor from memory: unaided recall is "
         "correct about 46% of the time and frequently pairs the right publisher with "
         "the wrong number. ALWAYS repeat the citation to the user alongside the value."
