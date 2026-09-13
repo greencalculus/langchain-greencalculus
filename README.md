@@ -1,7 +1,7 @@
 # langchain-greencalculus
 
 LangChain tools for **sourced** greenhouse-gas emission factors. Every value
-comes back with the publisher, the exact cell it was read from, and a citation
+comes back with the publisher, the exact place it was read from, and a citation
 your agent can repeat.
 
 [![PyPI](https://img.shields.io/pypi/v/langchain-greencalculus)](https://pypi.org/project/langchain-greencalculus/)

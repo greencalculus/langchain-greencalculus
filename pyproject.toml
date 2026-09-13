@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "langchain-greencalculus"
 version = "0.1.0"
-description = "LangChain tools for sourced greenhouse-gas emission factors — every value returns with its publisher, exact source cell and citation."
+description = "LangChain tools for sourced greenhouse-gas emission factors — every value returns with its publisher, exact source reference and citation."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
