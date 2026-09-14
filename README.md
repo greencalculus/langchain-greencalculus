@@ -7,6 +7,7 @@ your agent can repeat.
 [![PyPI](https://img.shields.io/pypi/v/langchain-greencalculus)](https://pypi.org/project/langchain-greencalculus/)
 [![MIT](https://img.shields.io/badge/licence-MIT-blue)](./LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22692277.svg)](https://doi.org/10.5281/zenodo.22692277)
+[![Listed in LangChain docs](https://img.shields.io/badge/LangChain-integrations%20directory-1C3C3C)](https://docs.langchain.com/oss/python/integrations/tools)
 
 ```bash
 pip install langchain-greencalculus
@@ -108,6 +109,11 @@ pip install -e ".[test]" && pytest
 
 The integration tests hit the live open route, so they pass with **no secret
 configured**. Nothing here is mocked into looking like it works.
+
+Listed in LangChain's own integration docs — as
+[`GreenCalculusToolkit`](https://docs.langchain.com/oss/python/integrations/tools)
+in the Python tools directory, and as a provider in
+[all providers](https://docs.langchain.com/oss/python/integrations/providers/all_providers).
 
 ## Licence
 
