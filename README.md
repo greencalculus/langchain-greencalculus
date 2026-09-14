@@ -64,7 +64,7 @@ from langchain_greencalculus import (
 )
 
 tools = [EmissionFactorSearch(), EmissionFactorLookup(), EmissionsCalculator()]
-agent = create_agent("anthropic:claude-sonnet-4-5", tools=tools)
+agent = create_agent("anthropic:claude-sonnet-5", tools=tools)
 
 agent.invoke({"messages": [{"role": "user",
     "content": "We used 12,000 kWh of UK grid electricity. What are the emissions, and cite the source."}]})

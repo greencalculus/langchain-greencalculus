@@ -34,7 +34,7 @@ def main() -> None:
 
     from langchain.agents import create_agent
 
-    agent = create_agent("anthropic:claude-sonnet-4-5", tools=TOOLS)
+    agent = create_agent("anthropic:claude-sonnet-5", tools=TOOLS)
     result = agent.invoke({"messages": [{"role": "user", "content": QUESTION}]})
     print(result["messages"][-1].content)
 
