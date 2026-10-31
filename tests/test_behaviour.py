@@ -12,6 +12,7 @@ from langchain_greencalculus import (
     EmissionFactorLookup,
     EmissionFactorSearch,
     EmissionsCalculator,
+    ShipCIICalculator,
 )
 
 UK_GRID = "grid.gbr.electricity.location_based"
@@ -110,3 +111,31 @@ def test_calculate_infers_the_unit_when_the_model_omits_it():
     out = EmissionsCalculator().invoke({"key": UK_GRID, "quantity": 1})
     assert "kWh" in out
     assert "Calculation failed" not in out
+
+
+CLASSNK = {"ship_type": "bulk", "capacity": 62000, "distance_nm": 60045, "year": 2026,
+           "fuel": [{"fuel": "hfo", "tonnes": 5602.76}]}
+
+
+def test_keyless_cii_refuses_rather_than_guessing(monkeypatch):
+    """No local fallback: an uncited CII is exactly what the package exists to stop."""
+    monkeypatch.delenv("GREENCALCULUS_API_KEY", raising=False)
+    out = ShipCIICalculator(api_key=None).invoke(CLASSNK)
+    assert "needs an API key" in out and "greencalculus.com/developers" in out
+
+
+@pytest.mark.skipif(not os.environ.get("GREENCALCULUS_API_KEY"),
+                    reason="keyed calculation needs GREENCALCULUS_API_KEY")
+def test_keyed_cii_reproduces_classnk_and_cites_imo():
+    out = ShipCIICalculator().invoke(CLASSNK)
+    assert "2026 rating: D" in out and "attained 4.687" in out and "required 4.413" in out
+    assert "2025 C" in out and "2026 D" in out
+    assert "MEPC.353(78)" in out and "MEPC.400(83)" in out
+    assert "receipt:" in out
+
+
+@pytest.mark.skipif(not os.environ.get("GREENCALCULUS_API_KEY"),
+                    reason="keyed calculation needs GREENCALCULUS_API_KEY")
+def test_keyed_cii_passes_the_refusal_through():
+    out = ShipCIICalculator().invoke(dict(CLASSNK, year=2031))
+    assert out.startswith("Calculation failed") and "2031" in out

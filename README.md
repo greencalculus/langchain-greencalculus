@@ -82,6 +82,7 @@ market-based, well-to-tank vs combustion.
 | `EmissionFactorSearch` | no | Plain-English search, returns candidate keys with values and publishers |
 | `EmissionFactorLookup` | no | One factor by exact key, with its citation. `as_of` pinning needs a key |
 | `EmissionsCalculator` | optional | Quantity × factor. With a key you get a server-side audit trail; without one it multiplies locally **and says so** |
+| `ShipCIICalculator` | yes | A ship's IMO Carbon Intensity Indicator and A–E rating for 2023–2030 from its type, capacity, distance and fuel, with the IMO resolution behind each parameter. Without a key it computes nothing **and says so** |
 
 ## Configuration
 
@@ -101,7 +102,7 @@ server-side calculations, and higher rate limits.
 This package runs LangChain's own conformance suite — `ToolsUnitTests` and
 `ToolsIntegrationTests` from
 [`langchain-tests`](https://pypi.org/project/langchain-tests/) — against all
-three tools, sync and async.
+four tools, sync and async.
 
 ```bash
 pip install -e ".[test]" && pytest

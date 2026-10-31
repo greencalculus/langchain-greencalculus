@@ -1,4 +1,4 @@
-"""LangChain's own conformance suite, run against all three tools.
+"""LangChain's own conformance suite, run against all four tools.
 
 These are not our tests — they are `langchain-tests`, the suite LangChain
 publishes so an integration can be checked against langchain-core's interfaces
@@ -19,6 +19,7 @@ from langchain_greencalculus import (
     EmissionFactorLookup,
     EmissionFactorSearch,
     EmissionsCalculator,
+    ShipCIICalculator,
 )
 
 UK_GRID = "grid.gbr.electricity.location_based"
@@ -79,3 +80,24 @@ class _Calc:
 
 class TestCalcUnit(_Calc, ToolsUnitTests): ...
 class TestCalcIntegration(_Calc, ToolsIntegrationTests): ...
+
+
+class _CII:
+    @property
+    def tool_constructor(self) -> Type[BaseTool]:
+        return ShipCIICalculator
+
+    @property
+    def tool_constructor_params(self) -> dict:
+        return {}
+
+    @property
+    def tool_invoke_params_example(self) -> dict:
+        # The ClassNK worked example. With no key in CI this exercises the
+        # documented refusal; with one it rates the ship D for 2026.
+        return {"ship_type": "bulk", "capacity": 62000, "distance_nm": 60045, "year": 2026,
+                "fuel": [{"fuel": "hfo", "tonnes": 5602.76}]}
+
+
+class TestCIIUnit(_CII, ToolsUnitTests): ...
+class TestCIIIntegration(_CII, ToolsIntegrationTests): ...
