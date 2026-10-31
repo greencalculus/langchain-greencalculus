@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Literal, Optional, Type
 
 from langchain_core.callbacks import AsyncCallbackManagerForToolRun, CallbackManagerForToolRun
 from langchain_core.tools import BaseTool
@@ -263,8 +263,106 @@ class EmissionsCalculator(_Base):
         return "\n".join(lines)
 
 
+# --------------------------------------------------------------------------- #
+# ship CII
+# --------------------------------------------------------------------------- #
+ShipType = Literal["bulk", "gas", "tanker", "container", "gencargo", "reefer", "combination",
+                   "lng", "vehicle", "roro", "ropax", "ropax_hsc", "cruise"]
+FuelId = Literal["mdo", "lfo", "hfo", "lng", "propane", "butane", "ethane", "methanol", "ethanol"]
+
+
+class FuelBurned(BaseModel):
+    fuel: FuelId = Field(description="IMO fuel: hfo, lfo, mdo (diesel/gas oil), lng, propane, butane, ethane, methanol, ethanol.")
+    tonnes: float = Field(description="Tonnes of this fuel burned in the calendar year.")
+
+
+class CIIInput(BaseModel):
+    ship_type: ShipType = Field(description=(
+        "bulk carrier, gas carrier, tanker, container ship, gencargo (general cargo), reefer "
+        "(refrigerated cargo), combination carrier, lng carrier, vehicle (ro-ro vehicle carrier), "
+        "roro (ro-ro cargo), ropax (ro-ro passenger), ropax_hsc (ro-pax high-speed craft), cruise."))
+    capacity: float = Field(description=(
+        "Deadweight (DWT) for bulk, gas, tanker, container, gencargo, reefer, combination and lng; "
+        "gross tonnage (GT) for vehicle, roro, ropax, ropax_hsc and cruise."))
+    distance_nm: float = Field(description="Distance sailed in the calendar year, in nautical miles.")
+    year: int = Field(description="The rating year, 2023 to 2030.")
+    fuel: List[FuelBurned] = Field(description="Fuel burned in the year, each fuel listed once.")
+    previous_ratings: Optional[List[str]] = Field(
+        default=None,
+        description="Optional: up to two earlier ratings A-E, the year before `year` first, e.g. ['D', 'D'].")
+    gross_tonnage: Optional[float] = Field(
+        default=None, description="Optional: GT, for the 5,000 GT applicability test when capacity is DWT.")
+
+
+class ShipCIICalculator(_Base):
+    """A ship's IMO Carbon Intensity Indicator and A-E rating, with every IMO parameter cited."""
+
+    name: str = "imo_cii_rating"
+    description: str = (
+        "Rate a ship's operational carbon intensity (IMO CII, MARPOL Annex VI regulation 28) A to E "
+        "for a year from 2023 to 2030, from its type, capacity, distance sailed and fuel burned. "
+        "Returns the attained and required CII, the rating for every year to 2030, whether a "
+        "corrective action plan is due, and the IMO resolution behind each parameter. Use this "
+        "rather than computing a CII yourself: the reference lines, boundaries and reduction "
+        "factors differ by ship type and size band, and a remembered one is easily the wrong band. "
+        "Repeat the citations. Needs a free API key."
+    )
+    args_schema: Type[BaseModel] = CIIInput
+
+    def _run(self, ship_type: str, capacity: float, distance_nm: float, year: int,
+             fuel: List[Any], previous_ratings: Optional[List[str]] = None,
+             gross_tonnage: Optional[float] = None,
+             run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+        if not self.api_key:
+            # No local fallback: a CII without its parameters' sources is the
+            # unsourced number this package exists to stop.
+            return ("The CII rating needs an API key, so nothing was computed. A free key at "
+                    "https://greencalculus.com/developers/ returns the rating with every IMO "
+                    "parameter cited.")
+        body: Dict[str, Any] = {
+            "ship_type": ship_type, "capacity": capacity, "distance_nm": distance_nm, "year": year,
+            "fuel": [f.model_dump() if isinstance(f, BaseModel) else dict(f) for f in fuel],
+        }
+        if previous_ratings:
+            body["previous_ratings"] = previous_ratings
+        if gross_tonnage:
+            body["gross_tonnage"] = gross_tonnage
+        try:
+            res = self.gc.calculate("cii", **body)
+        except GreenCalculusError as e:
+            return f"Calculation failed ({e.code}): {e.message}"
+        att, req = res.get("attained_cii") or {}, res.get("required_cii") or {}
+        unit = att.get("unit", "")
+        lines = [f"{res.get('year')} rating: {res.get('rating')}  "
+                 f"(attained {att.get('value', 0):.3f}, required {req.get('value', 0):.3f} {unit})"]
+        years = res.get("years") or []
+        if years:
+            lines.append("by year: " + ", ".join(f"{y['year']} {y['rating']}" for y in years))
+        ca = res.get("corrective_action") or {}
+        if ca.get("reason"):
+            lines.append(ca["reason"])
+        if res.get("applies_note"):
+            lines.append(res["applies_note"])
+        # One line per IMO table, not per number: the model should cite the
+        # resolution and table, and 15 near-identical strings bury that.
+        seen: Dict[str, str] = {}
+        for p in (res.get("parameters") or {}).values():
+            cit = p.get("citation") or {}
+            name = cit.get("source_name") or cit.get("source_id")
+            if name and name not in seen:
+                ref = (cit.get("cell_ref") or "").split(",")[0]
+                seen[name] = f"{name}, {ref}".rstrip(", ")
+        if seen:
+            lines.append("sources: " + " | ".join(seen.values()))
+        ver = (res.get("meta") or {}).get("gc_version", "n/a")
+        rid = (res.get("receipt") or {}).get("id", "")
+        lines.append(f"data version: {ver}" + (f"  receipt: {rid[:16]}…" if rid else ""))
+        return "\n".join(lines)
+
+
 __all__ = [
     "EmissionFactorLookup",
     "EmissionFactorSearch",
     "EmissionsCalculator",
+    "ShipCIICalculator",
 ]

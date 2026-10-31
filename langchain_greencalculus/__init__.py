@@ -10,6 +10,7 @@ from langchain_greencalculus.tools import (
     EmissionFactorLookup,
     EmissionFactorSearch,
     EmissionsCalculator,
+    ShipCIICalculator,
 )
 
 __version__ = "0.1.1"
@@ -18,5 +19,6 @@ __all__ = [
     "EmissionFactorLookup",
     "EmissionFactorSearch",
     "EmissionsCalculator",
+    "ShipCIICalculator",
     "__version__",
 ]
